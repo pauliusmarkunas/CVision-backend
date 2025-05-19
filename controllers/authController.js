@@ -8,6 +8,8 @@ import { redisClient } from "../utils/redisConnection.js";
 dotenv.config();
 const IS_PRODUCTION = JSON.parse(process.env.IS_PRODUCTION);
 
+// -------------------------------------------------------------------------------------------------------
+
 export async function register(req, res) {
   const { email, password } = req.body;
 
@@ -67,6 +69,8 @@ export async function register(req, res) {
   }
 }
 
+// -------------------------------------------------------------------------------------------------------
+
 export async function registerCodeValidation(req, res) {
   const { validationCode, email } = req.body;
 
@@ -110,6 +114,8 @@ export async function registerCodeValidation(req, res) {
   }
 }
 
+// -------------------------------------------------------------------------------------------------------
+
 export async function login(req, res) {
   const { email, password } = req.body;
 
@@ -150,6 +156,16 @@ export async function login(req, res) {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
+}
+
+export function logoutUser(req, res) {
+  res.clearCookie("refreshToken", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  });
+
+  return res.status(200).json({ message: "Logged out successfully" });
 }
 
 export function getUserInfo(req, res) {

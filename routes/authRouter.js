@@ -2,6 +2,7 @@ import express from "express";
 import {
   getUserInfo,
   login,
+  logoutUser,
   register,
   registerCodeValidation,
 } from "../controllers/authController.js";
@@ -20,6 +21,8 @@ router.post("/register", registerValidation, register);
 router.post("/validate", registerCodeValidationSchema, registerCodeValidation);
 
 router.post("/login", loginValidation, login);
+
+router.post("/logout", logoutUser);
 
 router.get("/me", authUser, getUserInfo);
 

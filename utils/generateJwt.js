@@ -12,7 +12,7 @@ export function generateJwtToken(user, secretType = "session") {
     { first_name, last_name, email, id },
     secretType === "session" ? JWT_SESSION_SECRET : JWT_REFRESH_SECRET,
     {
-      expiresIn: "30min",
+      expiresIn: secretType === "session" ? "30min" : "30d",
     }
   )}`;
 }
