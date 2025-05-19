@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 dotenv.config();
 
-const { JWT_SECRET } = process.env;
+const { JWT_SESSION_SECRET, JWT_REFRESH_SECRET } = process.env;
 
 export function authUser(req, res, next) {
   const authHeader = req.headers["authorization"];
@@ -14,15 +14,32 @@ export function authUser(req, res, next) {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SESSION_SECRET);
+    req.user = decoded;
+    return next();
+  } catch (error) {
+    const refreshToken = req.cookies?.refreshToken;
 
-    if (!decoded) {
-      return res.status(401).json({ message: "Unauthorized, invalid token" });
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized, no refresh token" });
     }
 
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res.status(401).json({ message: error.message });
+    try {
+      const refreshDecoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+
+      if (refreshDecoded) {
+        const newSessionToken = generateJwtToken(refreshDecoded);
+
+        // Set the new session token in the response header (need to intercept response in frontend)
+        res.setHeader("Authorization", newSessionToken);
+        req.user = refreshDecoded;
+        return next();
+      }
+    } catch (error) {
+      return res.status(401).json({ message: "session token refresh error" });
+    }
+    return res.status(401).json({ message: "session token error" });
   }
 }

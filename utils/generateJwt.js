@@ -5,10 +5,14 @@ dotenv.config();
 
 const { JWT_SESSION_SECRET, JWT_REFRESH_SECRET } = process.env;
 
-export function generateJwtToken(user, secret = JWT_SESSION_SECRET) {
+export function generateJwtToken(user, secretType = "session") {
   const { first_name, last_name, email, id } = user;
   // console.log({ first_name, last_name, email, id });
-  return `Bearer ${jwt.sign({ first_name, last_name, email, id }, secret, {
-    expiresIn: "30min",
-  })}`;
+  return `Bearer ${jwt.sign(
+    { first_name, last_name, email, id },
+    secretType === "session" ? JWT_SESSION_SECRET : JWT_REFRESH_SECRET,
+    {
+      expiresIn: "30min",
+    }
+  )}`;
 }

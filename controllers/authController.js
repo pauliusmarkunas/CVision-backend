@@ -6,7 +6,7 @@ import EmailService from "../services/emailService.js";
 import registerValidationHtmlTemplate from "../htmlTemplates/registerValidationEmail.js";
 import { redisClient } from "../utils/redisConnection.js";
 dotenv.config();
-const IS_PRODUCTION = process.env.IS_PRODUCTION === "production";
+const IS_PRODUCTION = JSON.parse(process.env.IS_PRODUCTION);
 
 export async function register(req, res) {
   const { email, password } = req.body;
@@ -115,7 +115,7 @@ export async function login(req, res) {
 
   try {
     const user = await pool.query(
-      "select * from organizers where email = $1 and deleted_at IS NULL",
+      "select * from users where email = $1 and deleted_at IS NULL",
       [email]
     );
 
@@ -134,9 +134,19 @@ export async function login(req, res) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const token = generateJwtToken(userData);
+    // 2nd argument - JWT secret used: "session"(default) or "refresh"
+    const sessionToken = generateJwtToken(userData);
+    const refreshToken = generateJwtToken(userData, "refresh");
 
-    res.status(200).json({ message: "Login successful", token });
+    // set refresh token in cookie
+    res.cookie("refreshToken", refreshToken, {
+      httpOnly: true,
+      secure: IS_PRODUCTION,
+      sameSite: IS_PRODUCTION ? "none" : "lax",
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+    });
+
+    res.status(200).json({ message: "Login successful", sessionToken });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -146,4 +156,4 @@ export function getUserInfo(req, res) {
   res.status(200).json(req.user);
 }
 
-// different approach: use bearer header with jwt...
+// after MVP add remind of password
