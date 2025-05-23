@@ -172,4 +172,6 @@ export function getUserInfo(req, res) {
   res.status(200).json(req.user);
 }
 
+// add delete account feature
+
 // after MVP add remind of password
